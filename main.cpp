@@ -2,9 +2,20 @@
 #include <filesystem>
 #include <cmath>
 #include <vector>
+#include <iostream>
+#include <fstream>
 
 int main()
 {
+    int highscore = 0;
+    std::ifstream infile("assets/data.txt");
+    if (infile.is_open()) {
+        infile >> highscore;
+        infile.close();
+    }
+
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
+
     sf::Texture birdTexture;
     std::filesystem::path exeDir = std::filesystem::path().remove_filename();
     std::filesystem::path birdPath = exeDir / "assets/flepyGentlmen.png";
@@ -40,6 +51,25 @@ int main()
     float spacing = 400.f;
 
     int numOfWalls = 5;
+
+    sf::RectangleShape pointCounter;
+    int points = 0;
+    pointCounter.setSize({10.f, 1000.f});
+    pointCounter.setPosition({1180.f, 0.f});
+    pointCounter.setFillColor(sf::Color::Red);
+
+    sf::Font font;
+    font.openFromFile("assets/Minecraftia-Regular.ttf");
+    font.setSmooth(false);
+    sf::Text displayPoints(font, "0", 50);
+    displayPoints.setFillColor(sf::Color::Black);
+    displayPoints.setPosition({30.f, 70.f});
+    displayPoints.setFillColor(sf::Color::Black);
+
+    sf::Text displayHighscore(font, "0", 50);
+    displayHighscore.setFillColor(sf::Color::Black);
+    displayHighscore.setPosition({30.f, 140.f});
+    displayHighscore.setFillColor(sf::Color::Black);
 
     std::vector<sf::RectangleShape>walls;
 
@@ -90,15 +120,29 @@ int main()
             window.close();
         }
 
+        if(hitbox.getGlobalBounds().findIntersection(pointCounter.getGlobalBounds())) {
+            points++;
+            pointCounter.setPosition({pointCounter.getPosition().x + spacing, 0});
+            if(points > highscore) {
+                std::ofstream tofile("assets/data.txt");
+                    if (tofile.is_open()) {
+                    tofile << points;
+                    tofile.close();
+                    highscore = points;
+                }
+            }
+        }
+
         for(size_t i = 0; i < walls.size(); i+=2) {
-            walls[i].move(sf::Vector2f(-120.f, 0.f) * delta);
-            walls[i+1].move(sf::Vector2f(-120.f, 0.f) * delta);
+            walls[i].move(sf::Vector2f(-300.f, 0.f) * delta);
+            walls[i+1].move(sf::Vector2f(-300.f, 0.f) * delta);
             if(walls[i].getPosition().x < -wallWidth) {
                 float random = (std::rand() % 400) - 200;
                 walls[i].setPosition({numOfWalls * spacing - wallWidth,vertOffsetD + random});
                 walls[i+1].setPosition({numOfWalls * spacing - wallWidth,vertOffsetU + random});
             }
         }
+        pointCounter.move(sf::Vector2f(-300.f, 0.f) * delta);
 
         for(auto &wall : walls) {
             if(hitbox.getGlobalBounds().findIntersection(wall.getGlobalBounds()).has_value()) {
@@ -106,6 +150,9 @@ int main()
             }
         }
         
+        std::string pointsStr = std::to_string(points);
+        displayPoints.setString("Score: " + pointsStr);
+        displayHighscore.setString("Highscore: " + std::to_string(highscore));
 
         window.clear(sf::Color{83, 255, 254});
         for (auto &wall : walls)
@@ -113,6 +160,8 @@ int main()
             window.draw(wall);
         }
         window.draw(bird);
+        window.draw(displayPoints);
+        window.draw(displayHighscore);
         window.display();
     }
 }
