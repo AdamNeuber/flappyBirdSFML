@@ -1,6 +1,7 @@
 #include <SFML/Graphics.hpp>
 #include <filesystem>
 #include <cmath>
+#include <random>
 #include <vector>
 #include <iostream>
 #include <fstream>
@@ -14,7 +15,8 @@ int main()
         infile.close();
     }
 
-    std::srand(static_cast<unsigned>(std::time(nullptr)));
+    std::random_device rng;
+    std::uniform_int_distribution dist(-200, 200);
 
     sf::Texture birdTexture;
     std::filesystem::path exeDir = std::filesystem::path().remove_filename();
@@ -31,7 +33,7 @@ int main()
     sf::Sprite bird(birdTexture);
 
     float velocityY = 0.f;
-    const float gravity = 0.7f;
+    const float gravity = 0.9f;
     const float jumpStrength = -600.f;
     bool hasJumped = false;
 
@@ -78,7 +80,7 @@ int main()
 
     for (size_t i = 0; i < numOfWalls; i++)
     {
-        float random = (std::rand() % 400) - 200;
+        float random = dist(rng);
 
         wallD.setPosition({1100.f + spacing*i,vertOffsetD + random});
         wallD.setFillColor(sf::Color({22, 255, 0}));
@@ -137,7 +139,7 @@ int main()
             walls[i].move(sf::Vector2f(-300.f, 0.f) * delta);
             walls[i+1].move(sf::Vector2f(-300.f, 0.f) * delta);
             if(walls[i].getPosition().x < -wallWidth) {
-                float random = (std::rand() % 400) - 200;
+                float random = dist(rng);
                 walls[i].setPosition({numOfWalls * spacing - wallWidth,vertOffsetD + random});
                 walls[i+1].setPosition({numOfWalls * spacing - wallWidth,vertOffsetU + random});
             }
